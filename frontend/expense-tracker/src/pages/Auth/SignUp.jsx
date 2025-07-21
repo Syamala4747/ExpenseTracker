@@ -100,7 +100,7 @@ const SignUp = () => {
 <ProfilePhotoSelector image={profilePic} setImage={setProfilePic} />
 
 
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div className="w-full h-auto mt-10 flex flex-col justify-center px-4">
     <Input 
     value={fullName}
     onChange={({target})=> setFullName(target.value)}
