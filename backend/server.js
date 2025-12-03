@@ -20,14 +20,32 @@ const allowedOrigins = clientUrlEnv.split(',').map(s => s.trim()).filter(Boolean
 
 app.use(cors({
   origin: function(origin, callback) {
+    // DEBUG: log incoming origin and configured allowed origins
+    console.log('CORS check - incoming origin:', origin, 'allowedOrigins:', allowedOrigins);
     // Allow requests from tools (curl/postman) where origin is undefined
     if (!origin) return callback(null, true);
     // If no allowed origins configured, allow all
     if (allowedOrigins.length === 0) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) {
+      console.log('CORS: origin explicitly allowed:', origin);
       return callback(null, true);
     }
-    // Signal that origin is not allowed without throwing an exception
+    // Allow common hosting provider domains when a specific origin wasn't configured
+    // This helps when the frontend is deployed on Vercel/Render/Netlify and the env var
+    // wasn't updated to include the deployed origin yet.
+    try {
+      const lower = (origin || '').toLowerCase();
+      const allowedSuffixes = ['.vercel.app', '.onrender.com', '.netlify.app', '.github.io', '.now.sh'];
+      const suffixMatch = allowedSuffixes.some(s => lower.endsWith(s));
+      if (suffixMatch) {
+        console.log('CORS: origin allowed by hosting suffix match:', origin);
+        return callback(null, true);
+      }
+    } catch (e) {
+      // ignore and fall through to deny
+    }
+    console.warn('CORS: origin not allowed:', origin);
+    // Deny access: do not set Access-Control-Allow-Origin header
     return callback(null, false);
   },
   methods: ["GET", "POST", "PUT", "DELETE"],
