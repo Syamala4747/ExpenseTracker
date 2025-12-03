@@ -8,11 +8,17 @@ const generateToken = (id) => {
 
 // Register User
 exports.registerUser = async (req, res) => {
-    const{fullName,email,password,profileImageUrl} = req.body;
+    // Log incoming body for debugging when clients send malformed requests
+    console.log('RegisterUser payload:', req.body);
+    const { fullName, email, password, profileImageUrl } = req.body || {};
 
-    if(!fullName || !email || !password){
-        return res.status(400).json({message:"All fields are required"});
-
+    // Give more specific field-level errors to help frontend debugging
+    if (!fullName || !email || !password) {
+        const missing = [];
+        if (!fullName) missing.push('fullName');
+        if (!email) missing.push('email');
+        if (!password) missing.push('password');
+        return res.status(400).json({ message: `Missing required fields: ${missing.join(', ')}` });
     }
     try{
         const existingUser = await User.findOne({email});
