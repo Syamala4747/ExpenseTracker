@@ -8,8 +8,7 @@ const authRoutes = require("./routes/authRoutes");
 const incomeRoutes = require("./routes/incomeRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
-const uploadRoutes = require("./routes/uploadRoutes"); // ✅ NEW: Add Cloudinary upload route
-const parseRoutes = require("./routes/parseRoutes"); // OCR parse route
+const uploadRoutes = require("./routes/uploadRoutes"); // Cloudinary upload route
 
 const app = express();
 
@@ -97,8 +96,8 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/income", incomeRoutes);
 app.use("/api/v1/expense", expenseRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
-app.use("/api/v1/upload", uploadRoutes); // ✅ NEW: Cloudinary photo upload route
-app.use("/api/v1/parse", parseRoutes); // OCR parse endpoint
+// Cloudinary upload route (kept for deployment)
+app.use("/api/v1/upload", uploadRoutes);
 
 // Dev-only debug endpoint: shows what origins the server considers allowed
 if ((process.env.NODE_ENV || 'development') !== 'production') {

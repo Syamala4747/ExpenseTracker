@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Input from "../Inputs/Input";
 import EmojiPickerPopup from "../EmojiPickerPopup";
-import ReceiptUpload from "../ReceiptUpload";
+// Receipt upload removed — manual add only
 import toast from 'react-hot-toast';
 
 const AddExpenseForm = ({ onAddExpense }) => {
@@ -57,8 +57,7 @@ const AddExpenseForm = ({ onAddExpense }) => {
         onSelect={(selectedIcon) => handleChange("icon", selectedIcon)}
       />
       <div className="mb-3">
-        <label className="text-sm font-medium">Or upload receipt</label>
-        <ReceiptUpload onParsed={handleParsed} />
+        <label className="text-sm font-medium">Add manually</label>
       </div>
       <Input
         value={income.category}
