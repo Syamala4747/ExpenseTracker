@@ -1,7 +1,11 @@
+<<<<<<< HEAD
 // Prefer Vite env `VITE_BASE_URL` when available, otherwise fallback to the
 // previously hardcoded production URL. This allows switching base URL via
 // `.env` during development or deployment.
 export const BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BASE_URL) || "https://expensetracker-1-k6gn.onrender.com";
+=======
+export const BASE_URL = "https://expensetracker-7u1c.onrender.com";                 
+>>>>>>> 66e023d68d90a68764e7d8d96638eb71cd7871bb
 
 // utils/apiPaths.js
 export const API_PATHS = {
