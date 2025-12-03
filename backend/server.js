@@ -14,25 +14,31 @@ const parseRoutes = require("./routes/parseRoutes"); // OCR parse route
 const app = express();
 
 // ✅ Middleware for CORS
-// Support comma-separated CLIENT_URL in .env, but only echo a single origin per response
+// Support comma-separated CLIENT_URL in .env, but allow additional overrides via EXTRA_ALLOWED_ORIGINS
 const clientUrlEnv = process.env.CLIENT_URL || '';
-const allowedOrigins = clientUrlEnv.split(',').map(s => s.trim()).filter(Boolean);
+const extraAllowedEnv = process.env.EXTRA_ALLOWED_ORIGINS || '';
+// sensible default extra - include the known Vercel frontend used for testing/deployments
+const DEFAULT_EXTRA_ALLOWED = ['https://expense-tracker-delta-seven-83.vercel.app'];
+const allowedOriginsFromClient = clientUrlEnv.split(',').map(s => s.trim()).filter(Boolean);
+const allowedOriginsFromExtra = extraAllowedEnv.split(',').map(s => s.trim()).filter(Boolean);
+const allowedOrigins = Array.from(new Set([
+  ...allowedOriginsFromClient,
+  ...allowedOriginsFromExtra,
+  ...DEFAULT_EXTRA_ALLOWED
+]));
+console.log('Configured CORS allowedOrigins:', allowedOrigins);
 
+// Use the `cors` middleware for basic handling but also add a fallback
 app.use(cors({
   origin: function(origin, callback) {
-    // DEBUG: log incoming origin and configured allowed origins
     console.log('CORS check - incoming origin:', origin, 'allowedOrigins:', allowedOrigins);
-    // Allow requests from tools (curl/postman) where origin is undefined
     if (!origin) return callback(null, true);
-    // If no allowed origins configured, allow all
     if (allowedOrigins.length === 0) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) {
       console.log('CORS: origin explicitly allowed:', origin);
       return callback(null, true);
     }
     // Allow common hosting provider domains when a specific origin wasn't configured
-    // This helps when the frontend is deployed on Vercel/Render/Netlify and the env var
-    // wasn't updated to include the deployed origin yet.
     try {
       const lower = (origin || '').toLowerCase();
       const allowedSuffixes = ['.vercel.app', '.onrender.com', '.netlify.app', '.github.io', '.now.sh'];
@@ -45,13 +51,38 @@ app.use(cors({
       // ignore and fall through to deny
     }
     console.warn('CORS: origin not allowed:', origin);
-    // Deny access: do not set Access-Control-Allow-Origin header
     return callback(null, false);
   },
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   optionsSuccessStatus: 204,
 }));
+
+// Additional robust CORS handling: explicitly set CORS headers for OPTIONS and regular requests
+const allowedSuffixes = ['.vercel.app', '.onrender.com', '.netlify.app', '.github.io', '.now.sh'];
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  // no origin -> skip
+  if (!origin) return next();
+
+  const lower = (origin || '').toLowerCase();
+  const originAllowed = (
+    allowedOrigins.length === 0 ||
+    allowedOrigins.includes(origin) ||
+    allowedSuffixes.some(s => lower.endsWith(s))
+  );
+
+  if (originAllowed) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(204);
+    }
+  }
+  next();
+});
 
 // Note: do not set Access-Control-Allow-Origin to multiple comma-separated values.
 // The `cors` middleware above will echo back a single allowed origin when appropriate.
@@ -68,6 +99,18 @@ app.use("/api/v1/expense", expenseRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
 app.use("/api/v1/upload", uploadRoutes); // ✅ NEW: Cloudinary photo upload route
 app.use("/api/v1/parse", parseRoutes); // OCR parse endpoint
+
+// Dev-only debug endpoint: shows what origins the server considers allowed
+if ((process.env.NODE_ENV || 'development') !== 'production') {
+  app.get('/api/v1/debug/allowed-origins', (req, res) => {
+    return res.json({
+      allowedOrigins,
+      clientUrlEnv,
+      incomingOrigin: req.headers.origin || null,
+      nodeEnv: process.env.NODE_ENV || 'development'
+    });
+  });
+}
 
 // ❌ REMOVE local uploads serving (since we use Cloudinary now)
 // app.use("/uploads", express.static(path.join(__dirname, "uploads")));
