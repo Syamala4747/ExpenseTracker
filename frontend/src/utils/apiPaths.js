@@ -1,4 +1,7 @@
-export const BASE_URL = "https://expensetracker-1-k6gn.onrender.com";                 
+// Prefer Vite env `VITE_BASE_URL` when available, otherwise fallback to the
+// previously hardcoded production URL. This allows switching base URL via
+// `.env` during development or deployment.
+export const BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BASE_URL) || "https://expensetracker-1-k6gn.onrender.com";
 
 // utils/apiPaths.js
 export const API_PATHS = {
