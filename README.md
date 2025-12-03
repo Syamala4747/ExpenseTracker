@@ -77,12 +77,7 @@ CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 
 # LLM (optional) - used to enrich OCR output
-LLM_API_KEY=
-LLM_KEY=
-LLM_API_URL=
 
-# OCR.space API key (optional) - enables cloud OCR fallback
-OCR_SPACE_API_KEY=
 
 NODE_ENV=development
 ```
@@ -91,25 +86,7 @@ Notes:
 - If you don't have `LLM_API_KEY`, LLM enrichment is skipped and the server will use heuristics for category/amount/date.
 - If you don't have `OCR_SPACE_API_KEY` and Tesseract fails, the server will return 503 with a debug field (development only).
 
-Below is the exact set of variables currently present in `backend/.env` for this project (keep these keys in your local `.env`):
 
-```
-MONGO_URI
-CLIENT_URL
-JWT_SECRET
-PORT
-
-# Cloudinary
-CLOUDINARY_CLOUD_NAME
-CLOUDINARY_API_KEY
-CLOUDINARY_API_SECRET
-
-# LLM
-LLM_API_KEY
-
-
-NODE_ENV
-```
 
 ## Tesseract troubleshooting
 
